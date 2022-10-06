@@ -1,0 +1,16 @@
+
+AIzaSyC0vH9QPnElKgoIl0g02bz2rP25ZvnPZ1Q - Web API Key
+
+https://azim-weather-default-rtdb.firebaseio.com/ - Realtime Database
+
+Firebase config
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0vH9QPnElKgoIl0g02bz2rP25ZvnPZ1Q",
+  authDomain: "azim-weather.firebaseapp.com",
+  databaseURL: "https://azim-weather-default-rtdb.firebaseio.com",
+  projectId: "azim-weather",
+  storageBucket: "azim-weather.appspot.com",
+  messagingSenderId: "135514372039",
+  appId: "1:135514372039:web:77dec7c199566460430be2"
+};
