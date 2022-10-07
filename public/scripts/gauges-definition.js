@@ -98,3 +98,6 @@ function createHumidityGauge(){
     });
     return gauge;
 }
+
+// Create Rain Gauge 
+

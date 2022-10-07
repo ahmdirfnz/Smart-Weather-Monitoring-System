@@ -50,8 +50,10 @@ function epochToJsDate(epochTime){
   const chartsDivElement = document.querySelector('#charts-div');
   const tempElement = document.getElementById("temp");
   const humElement = document.getElementById("hum");
-  const LDRElement = document.getElementById("ldr");
+  const ldrElement = document.getElementById("ldr");
   const rainElement = document.getElementById("rain");
+  const ldrGauge = document.getElementById("sunImage");
+  const rainGauge = document.getElementById("rainImage");
 //   const presElement = document.getElementById("pres");
   const updateElement = document.getElementById("lastUpdate")
   
@@ -178,6 +180,17 @@ function epochToJsDate(epochTime){
         // Update DOM elements
         var gaugeT = createTemperatureGauge();
         var gaugeH = createHumidityGauge();
+        if (rain == 0) {
+          rainGauge.src = "rain.png";
+        } else if (rain == 1) {
+          rainGauge.src = "notRain.jpeg";
+        }
+
+        if (ldr >= 400) {
+          ldrGauge.src = "sun.jpeg";
+        } else {
+          ldrGauge.src = "cloudy.jpeg";
+        }
         gaugeT.draw();
         gaugeH.draw();
         gaugeT.value = temperature;
@@ -260,7 +273,7 @@ function epochToJsDate(epochTime){
                 var temperature = element.temperature;
                 var humidity = element.humidity;
                 var rain = element.rain;
-                var rain = element.ldr;
+                var ldr = element.ldr;
                 // var pressure = element.pressure;
                 var timestamp = element.timestamp;
                 var content = '';

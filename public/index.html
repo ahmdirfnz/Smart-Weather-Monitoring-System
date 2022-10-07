@@ -99,15 +99,15 @@
             <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p>
             <p><span class="reading"><span id="hum"></span> &percnt;</span></p>
           </div>
-          <!--Rain-->
-          <div class="card">
-            <p><i class="fas fa-tint" style="color:#00add6;"></i> Rain</p>
-            <p><span class="reading"><span id="hum"></p>
-          </div>
           <!--LDR-->
           <div class="card">
-            <p><i class="fas fa-tint" style="color:#00add6;"></i> LDR</p>
-            <p><span class="reading"><span id="hum"></p>
+            <p><i class="fas fa-tint" style="color:#00add6;"></i> Sunny / Cloudy</p>
+            <p><span class="reading"><span id="ldr"></p>
+          </div>
+          <!--Rain-->
+          <div class="card">
+            <p><i class="fas fa-tint" style="color:#00add6;"></i> Rain / Not Rain</p>
+            <p><span class="reading"><span id="rain"></p>
           </div>
           <!--PRESSURE-->
           <!-- <div class="card">
@@ -128,14 +128,30 @@
             <canvas id="gauge-humidity"></canvas>
           </div>
           <!--RAIN-->
-          <div class="card">
+          <!-- <div class="card">
             <canvas id="gauge-rain"></canvas>
-          </div>
+          </div> -->
           <!--LDR-->
-          <div class="card">
+          <!-- <div class="card">
             <canvas id="gauge-ldr"></canvas>
+          </div> -->
+        </div>
+        <div id ="gauges-div">
+          <div class="cards">
+          <div class="card">
+            <!-- <canvas>
+              <img src="rain.png" alt="rain image" width="500" height="500">
+              <h1>Hello World</h1>
+            </canvas> -->
+            <img src="notRain.jpeg" alt="rain image" width="300" height="300" id="rainImage">
+          </div>
+          <div class="card">
+            <!-- <canvas id="gauge-ldr"></canvas> -->
+            <img src="sun.jpeg" alt="sun image" width="300" height="300" id="sunImage">
           </div>
         </div>
+        </div>
+        
       </div>
 
       <!--CHARTS-->

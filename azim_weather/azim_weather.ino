@@ -49,6 +49,8 @@ String databasePath;
 // Database child nodes
 String tempPath = "/temperature";
 String humPath = "/humidity";
+String rainPath = "/rain";
+String ldrPath = "/ldr";
 //String presPath = "/pressure";
 String timePath = "/timestamp";
 
@@ -208,6 +210,8 @@ void loop(){
 
     json.set(tempPath.c_str(), String(t));
     json.set(humPath.c_str(), String(h));
+    json.set(rainPath.c_str(), String(rainDigitalVal));
+    json.set(ldrPath.c_str(), String(sensorValue));
 //    json.set(presPath.c_str(), String(bme.readPressure()/100.0F));
     json.set(timePath, String(timestamp));
     Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());
