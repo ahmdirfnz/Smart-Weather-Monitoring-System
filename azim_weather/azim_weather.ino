@@ -6,6 +6,9 @@
 //#include <Adafruit_BME280.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>   // Universal Telegram Bot Library written by Brian Lough: https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot
+#include <ArduinoJson.h>
 
 #include "DHT.h"
 
@@ -14,6 +17,25 @@
 #include "addons/TokenHelper.h"
 // Provide the RTDB payload printing info and other helper functions.
 #include "addons/RTDBHelper.h"
+
+// Initialize Telegram BOT
+#define BOTtoken "5745278821:AAFoJGoosW96T8hM-Ya1v2aLAAcPKKoCyow"  // your Bot Token (Get from Botfather)
+
+// Use @myidbot to find out the chat ID of an individual or a group
+// Also note that you need to click "start" on a bot before it can
+// message you
+#define CHAT_ID "562232392"
+
+#ifdef ESP8266
+  X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+#endif
+
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+
+// Checks for new messages every 1 second.
+//int botRequestDelay = 1000;
+//unsigned long lastTimeBotRan;
 
 // Insert your network credentials
 #define WIFI_SSID "TP-Link_2.4GHz@unifi"
@@ -66,15 +88,13 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 // Variable to save current epoch time
 int timestamp;
 
-// BME280 sensor
-//Adafruit_BME280 bme; // I2C
 float temperature;
 float humidity;
 //float pressure;
 
 // Timer variables (send new readings every three minutes)
 unsigned long sendDataPrevMillis = 0;
-unsigned long timerDelay = 60000;
+unsigned long timerDelay = 10000;
 
 // Initialize BME280
 //void initBME(){
@@ -86,6 +106,7 @@ unsigned long timerDelay = 60000;
 
 // Initialize WiFi
 void initWiFi() {
+  WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
@@ -93,6 +114,7 @@ void initWiFi() {
     delay(1000);
   }
   Serial.println(WiFi.localIP());
+  client.setInsecure(); 
   Serial.println();
 }
 
@@ -103,12 +125,17 @@ unsigned long getTime() {
   return now;
 }
 
+
 void setup(){
   
   Serial.begin(115200);
 
-  // Initialize BME280 sensor
-//  initBME();
+  #ifdef ESP8266
+    configTime(0, 0, "pool.ntp.org");      // get UTC time via NTP
+    client.setTrustAnchors(&cert); // Add root certificate for api.telegram.org
+  #endif
+
+  
   initWiFi();
   timeClient.begin();
 
@@ -155,15 +182,7 @@ int timeSinceLastRead = 0;
 
 void loop(){
 
-  // Report every 2 seconds.
-//  if(timeSinceLastRead > 2000) {
-    
-
-    // Send new readings to database
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0)){
-    sendDataPrevMillis = millis();
-
-    // Reading temperature or humidity takes about 250 milliseconds!
+  // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     float h = dht.readHumidity();
     // Read temperature as Celsius (the default)
@@ -171,11 +190,45 @@ void loop(){
     // Read temperature as Fahrenheit (isFahrenheit = true)
     float f = dht.readTemperature(true);
 
-    // Rain Sensor
+//    // Rain Sensor
     int rainDigitalVal = digitalRead(rainDigital);
-
-     // LDR Sensor
+//
+//     // LDR Sensor
     int sensorValue = analogRead(A0);
+
+//    if((millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0)) {
+//      String message = "Humidity: " + String(h);
+//      bot.sendMessage(CHAT_ID, message, "");
+//    }
+
+  if (sensorValue <= 300) {
+    String message = "Humidity: " + String(h);
+
+    bot.sendMessage(CHAT_ID, message, "");
+  }
+    
+    // Send new readings to database
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0)){
+
+    String message = "Humidity: " + String(h) + "\n" + "https://azim-weather.web.app/";
+
+    bot.sendMessage(CHAT_ID, message, "");
+    
+    sendDataPrevMillis = millis();
+
+//    // Reading temperature or humidity takes about 250 milliseconds!
+//    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+//    float h = dht.readHumidity();
+//    // Read temperature as Celsius (the default)
+//    float t = dht.readTemperature();
+//    // Read temperature as Fahrenheit (isFahrenheit = true)
+//    float f = dht.readTemperature(true);
+//
+////    // Rain Sensor
+//    int rainDigitalVal = digitalRead(rainDigital);
+////
+////     // LDR Sensor
+//    int sensorValue = analogRead(A0);
 
 //    float voltage = sensorValue * (5.0 / 1023.0);
 
@@ -199,15 +252,6 @@ void loop(){
 
     parentPath= databasePath + "/" + String(timestamp);
 
-//    Serial.print("Humidity: ");
-//    Serial.print(h);
-//    Serial.print(" %\t");
-//    Serial.print("Temperature: ");
-//    Serial.print(t);
-//    Serial.print(" *C ");
-//    Serial.print(f);
-//    Serial.println(" *F\t");
-
     json.set(tempPath.c_str(), String(t));
     json.set(humPath.c_str(), String(h));
     json.set(rainPath.c_str(), String(rainDigitalVal));
@@ -215,7 +259,59 @@ void loop(){
 //    json.set(presPath.c_str(), String(bme.readPressure()/100.0F));
     json.set(timePath, String(timestamp));
     Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());
+
+//    String weatherCondition = "";
+//    String rainCondition = "";
+//
+//    if (rainDigitalVal == 1) {
+//      rainCondition = "Not Rain";
+//    } else {
+//      rainCondition = "Raining";
+//      
+//    }
+//
+//    if(sensorValue <= 300) {
+//    weatherCondition = "Cloudy";
+//    String message = "Weather Condition: " + weatherCondition + "/n" + "Rain Condition: " + rainCondition + "/n" + "Humidity: " + String(h) + "%%\n" + "Temperature: " +  String(t) + "\370\n" + "https://azim-weather.web.app/";
+//    bot.sendMessage(CHAT_ID, message, "");
+//    
+//    } else {
+//      weatherCondition = "Sunny";
+//    }
+//
+//    String message = "Weather Condition: " + weatherCondition + "/n" + "Rain Condition: " + rainCondition + "/n" + "Humidity: " + String(h) + "%%\n" + "Temperature: " +  String(t) + "\370\n" + "https://azim-weather.web.app/";
+//
+//    if (millis() > lastTimeBotRan + botRequestDelay)  {
+//
+//    if(sensorValue <= 300) {
+//    bot.sendMessage(CHAT_ID, message, "");
+//    
+//    }
+//
+//    lastTimeBotRan = millis();
+//  } 
+
+    // setup bot message
+
+//    bot.sendMessage(CHAT_ID, "hello", "");
+        
   }
+
+//  int sensorValue = analogRead(A0);
+//
+//  Serial.print("Ldr: ");
+//  Serial.println(sensorValue);
+//
+//  if(sensorValue <= 300) {
+//    bot.sendMessage(CHAT_ID, "Cloudy", "");
+//    
+//    } else {
+//      bot.sendMessage(CHAT_ID, "Sunny", "");
+//    }
+
+  
+
+//  bot.sendMessage(CHAT_ID, "Hello", "");
 
 //    // Compute heat index in Fahrenheit (the default)
 //    float hif = dht.computeHeatIndex(f, h);
